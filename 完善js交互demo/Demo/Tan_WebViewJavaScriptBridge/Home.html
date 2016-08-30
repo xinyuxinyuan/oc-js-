@@ -1,0 +1,103 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <style type="text/css">
+            html { font-family:Helvetica; color:#222; background:#D5FFFD; border: 5px dashed blue;}
+            .rowH3{margin: 0px; text-align: center; color: red;}
+            .jsBtn{font-size: 18px; color: red; }
+            .logoutBtn{display: none;}
+            </style>
+    </head>
+    <body>
+        <br/><h3 class="rowH3">商城首页Html</h3><br/>
+        <button  class="jsBtn"      id="jsBtn">戳我去领奖</button>&nbsp;
+        <button  class="logoutBtn"  style="font-size: 18px;">退出登录</button>
+        <h1>领奖次数：<span id="prizeNum">0</span></h1>
+        
+        
+        
+<!--       这里不是单单写下、下边的日志打印就好的，，不要忘记这个。。 -->
+        	<div id="logDiv"><!-- 打印日志 --></div>
+        
+        
+    </body>
+</html>
+
+<script type="text/javascript">
+    
+    
+    /*这段代码是固定的，必须要放到js中*/
+  function connectWebViewJavascriptBridge(callback) {
+      if (window.WebViewJavascriptBridge) {
+          callback(WebViewJavascriptBridge);
+      } else {
+          document.addEventListener('WebViewJavascriptBridgeReady', function() {
+                  callback(WebViewJavascriptBridge);
+          }, false);
+      }
+  }
+
+   //初始化调用函数connectWebViewJavascriptBridge
+     /*与OC交互的所有JS方法都要放在此处注册，才能调用通过JS调用OC或者让OC调用这里的JS*/
+    connectWebViewJavascriptBridge(function(bridge) {
+             
+                                   
+                                   
+                                   var uniqueId = 1;
+                                   //日志打印方法
+                                   function printLog(data) {
+                                   var logObj = document.getElementById('logDiv');
+                                   var el = document.createElement('div');
+                                   el.className = 'logLine';
+                                   el.innerHTML = uniqueId++ + ': ' + JSON.stringify(data); //json转字符串
+                                   if (logObj.children.length) { logObj.insertBefore(el, logObj.children[0]) }
+                                   else { logObj.appendChild(el) }
+                                   }
+                           
+                                   
+                                   
+                                   
+                                   
+                                   
+                                   
+      bridge.init(function(message, responseCallback) {});  //初始化bridge
+         
+                                   
+                                   
+    //注册js响应方法，响应OC调用，标识objc_Call_JS_Func_useInFo
+    bridge.registerHandler('objc_Call_JS_Func_useInFo', function(data, responseCallback) {
+        printLog(data);  //打印oc传过来的参数
+                          
+                          
+                          
+     });
+
+
+                                   
+                                   
+                                   
+      //注册js调用oc更新领奖次数消息    这里data是oc给js 的数据，js等到数据，做响应操作，比如注册后的消息，这里边接受到后就可以保存到服务器了。
+      bridge.registerHandler('objc_Call_JS_UpdateNum', function(data, responseCallback) {
+            document.getElementById('prizeNum').innerHTML = data.num;
+            (document.getElementsByClassName('logoutBtn')[0]).style.display="block";
+      });
+                                 
+      //js给oc发出去领奖消息  创建去领奖按钮标签，点击触发调用对应oc代码。。可以传参数过去，根据参数判断是否已经登录或者注册，
+      var prizeObj = document.getElementById('jsBtn');
+      prizeObj.onclick = function(e) {
+          e.preventDefault();
+          //给IOS发送消息
+          bridge.callHandler('js_Call_Objc_Prize', '', function(response) {   });
+      }
+
+      //js给oc发出退出登录
+      var logoutObj = document.getElementsByClassName('logoutBtn')[0];
+      logoutObj.onclick = function(e){
+          e.preventDefault();
+           //js创建退出登录的按钮标签，点击就会触发oc对应代码，可以传参数过去，然后oc端可以根据参数，做逻辑判断，退出登录状态
+          bridge.callHandler('js_Call_Objc_Logout', '', function(response){  });
+         (document.getElementsByClassName('logoutBtn')[0]).style.display="none";
+      }
+
+  });                     
+</script>
